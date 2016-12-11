@@ -9,7 +9,8 @@ let loadState = {
     game.load.spritesheet('torch', 'torch.png', 32, 64)
     game.load.images([
       'menu-background', 'first-level-background', 'second-level-background',
-      'floor', 'question', 'dragon'
+      'floor', 'question', 'dragon', 'door-block', 'lock', 'lock-screen', 'book',
+      'controls'
     ])
 
     game.load.path = 'assets/audio/'
@@ -20,10 +21,12 @@ let loadState = {
     game.load.audio('jump', ['jump.mp3', 'jump.ogg'])
     game.load.audio('jump-high', ['jump-high.mp3', 'jump-high.ogg'])
     game.load.audio('step', ['step.mp3', 'step.ogg'])
+    game.load.audio('kill-dragon', ['kill-dragon.mp3', 'kill-dragon.ogg'])
   },
 
   create () {
-    // game.state.start('firstLevel')
-    game.state.start('menu')
+    game.state.start('firstLevel')
+    // game.state.start('menu')
+    // game.state.start('secondLevel')
   }
 }

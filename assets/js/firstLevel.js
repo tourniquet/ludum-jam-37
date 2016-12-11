@@ -20,9 +20,17 @@ let firstLevel = {
     // can't jump so high
     this.noJumpHigh = game.add.audio('jump-high')
     this.noJumpHigh.volume = 0.5
-    this.noJumpHighPlayOnce = 3
+    this.noJumpHighPlayOnce = 0
     // step
     this.step = game.add.audio('step')
+    // kill dragon voice message
+    this.killDragonAudioMessage = game.add.audio('kill-dragon')
+    this.killDragonAudioMessageOnce = 1
+    this.killDragonShootCounter = 100000
+    this.shootDragonTexMessage = game.add.text(
+      600, 210, '',
+      { font: '24px Arial', fill: '#fff' }
+    )
 
     // enable physics
     game.physics.startSystem(Phaser.Physics.ARCADE)
@@ -30,6 +38,8 @@ let firstLevel = {
     // question box
     let fQuestionBox = game.add.sprite(200, 100, 'question')
     let sQuestionBox = game.add.sprite(400, 100, 'question')
+    // controls
+    let controls = game.add.sprite(0, 0, 'controls')
 
     // invisible floor
     this.floor = game.add.sprite(0, 325, 'floor')
@@ -37,6 +47,13 @@ let firstLevel = {
     this.floor.body.enable = true
     this.floor.body.immovable = true
 
+    // block access to dragon
+    this.blockDragon = game.add.sprite(600, 180, 'door-block')
+    game.physics.arcade.enable(this.blockDragon)
+    this.blockDragon.body.enable = true
+    this.blockDragon.body.immovable = true
+
+    // mario
     this.mario = game.add.sprite(100, 325, 'mario')
     game.physics.arcade.enable(this.mario)
     this.mario.anchor.setTo(0, 1)
@@ -74,8 +91,13 @@ let firstLevel = {
 
   update () {
     game.physics.arcade.collide(this.mario, this.floor)
+    game.physics.arcade.collide(this.mario, this.blockDragon, this.killDragonMessage, null, this)
 
     this.movePlayer()
+
+    if (this.killDragonShootCounter === 0) {
+      this.deadDragonFunc()
+    }
   },
 
   movePlayer () {
@@ -111,6 +133,7 @@ let firstLevel = {
         }
         this.shoot.play()
         this.eventOnce = true
+        this.killDragonShootCounter --
       }
     } else {
       this.eventOnce = false
@@ -120,8 +143,8 @@ let firstLevel = {
       this.mario.body.velocity.y = -300
       this.jump.play()
 
-      this.noJumpHighPlayOnce--
-      if (!this.noJumpHighPlayOnce) {
+      this.noJumpHighPlayOnce++
+      if (this.noJumpHighPlayOnce % 3 === 0) {
         this.noJumpHigh.play()
       }
     }
@@ -138,7 +161,7 @@ let firstLevel = {
 
   fartSorryFunc () {
     setTimeout(() => {
-      this.fartSorry.play()
+      // this.fartSorry.play()
     }, 400)
   },
 
@@ -146,5 +169,34 @@ let firstLevel = {
     if (this.mario.body.touching.down) {
       this.step.play()
     }
+  },
+
+  killDragonMessage () {
+    if (this.killDragonAudioMessageOnce === 1) {
+      this.killDragonAudioMessage.play()
+      this.killDragonAudioMessageOnce--
+
+      setTimeout(() => {
+        this.shootDragonTexMessage.text = 'Shoot the dragon'
+      }, 1200)
+    }
+
+    this.killDragonShootCounter = 3
+  },
+
+  deadDragonFunc () {
+    this.killDragonShootCounter--
+    this.blockDragon.body = false
+    game.add.tween(this.dragon).to({ alpha: 0 }, 1000, Phaser.Easing.Linear.None, true, 0, 0, false)
+    this.shootDragonTexMessage.text = ''
+
+    // dragon book
+    let book = game.add.sprite(660, 260, 'book')
+    book.alpha = 0
+    game.add.tween(book).to({ alpha: 1 }, 1000, Phaser.Easing.Linear.None, true, 0, 0, false)
+  },
+
+  showQuestions () {
+    let openBook = game.add.sprite(400, 200, 'open-book')
   }
 }

@@ -17,5 +17,6 @@ let menuState = {
 
 function startGame () {
   this.menuMusic.stop()
-  game.state.start('firstLevel')
+  // game.state.start('firstLevel')
+  game.state.start('secondLevel')
 }
