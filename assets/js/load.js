@@ -10,7 +10,8 @@ let loadState = {
     game.load.images([
       'menu-background', 'first-level-background', 'second-level-background',
       'floor', 'question', 'dragon', 'door-block', 'lock', 'lock-screen', 'book',
-      'controls'
+      'controls', 'controls-lvl2', 'open-book', 'tube', 'door', 'princess-block',
+      'win'
     ])
 
     game.load.path = 'assets/audio/'
@@ -22,11 +23,13 @@ let loadState = {
     game.load.audio('jump-high', ['jump-high.mp3', 'jump-high.ogg'])
     game.load.audio('step', ['step.mp3', 'step.ogg'])
     game.load.audio('kill-dragon', ['kill-dragon.mp3', 'kill-dragon.ogg'])
+    game.load.audio('another-castle', ['another-castle.mp3', 'another-castle.ogg'])
+    game.load.audio('mario-last-words', ['mario-last-words.mp3', 'mario-last-words.ogg'])
+    game.load.audio('die', ['die.mp3', 'die.ogg'])
   },
 
   create () {
-    game.state.start('firstLevel')
-    // game.state.start('menu')
-    // game.state.start('secondLevel')
+    game.state.remove('boot')
+    game.state.start('menu')
   }
 }

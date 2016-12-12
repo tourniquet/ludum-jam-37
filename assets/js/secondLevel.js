@@ -4,6 +4,11 @@ let secondLevel = {
   create () {
     game.add.image(0, 0, 'second-level-background')
 
+    game.state.remove('firstLevel')
+
+    // controls
+    game.add.image(0, 0, 'controls-lvl2')
+
     // level sounds
     this.shoot = game.add.audio('shoot')
     this.shoot.volume = 0.5
@@ -19,19 +24,10 @@ let secondLevel = {
     this.floor.body.enable = true
     this.floor.body.immovable = true
     // insibisle door block
-    this.doorBlock = game.add.sprite(400, 120, 'door-block')
+    this.doorBlock = game.add.sprite(400, 120, 'door')
     game.physics.arcade.enable(this.doorBlock)
     this.doorBlock.body.enable = true
     this.doorBlock.body.immovable = true
-
-    this.lock = game.add.sprite(438, 190, 'lock')
-    this.lock.inputEnabled = true
-    this.lock.input.useHandCursor = true
-    this.lock.events.onInputUp.add(this.showScreen, this)
-
-    // text bitmap
-    this.bitmapText = game.make.bitmapData(800, 400)
-    this.bitmapText.context.font = ''
 
     // mario
     this.mario = game.add.sprite(100, 235, 'mario')
@@ -62,19 +58,75 @@ let secondLevel = {
     fourthTorch.animations.add('fourthAnimatedTorch')
     fourthTorch.animations.play('fourthAnimatedTorch', 10, true)
 
+    // lock
+    this.lock = game.add.sprite(438, 190, 'lock')
+    this.lock.inputEnabled = true
+    this.lock.input.useHandCursor = true
+    this.lock.events.onInputUp.add(this.showScreen, this)
+    // lock screen
+    this.screen = game.add.sprite(-400, 200, 'lock-screen')
+    this.screen.anchor.setTo(0.5, 0.5)
+    this.screen.inputEnabled = true
+    this.screen.input.useHandCursor = true
+    this.screen.events.onInputUp.add(this.spriteDestroy, this)
+    this.lockIsEnable = false
+
+    // lock code
+    this.userCode = game.add.text(
+      350, 153, '',
+      { font: '30px SuperMario256', fill: '#d0d0d0' }
+    )
+    this.codeArr = []
+    this.code = '13985'
+
+    // open book
+    this.openBook = game.add.sprite(-300, 200, 'open-book')
+    this.openBook.anchor.setTo(0.5, 0.5)
+    this.openBook.inputEnabled = true
+    this.openBook.input.useHandCursor = true
+    this.openBook.events.onInputUp.add(this.closeQuestionsBook, this)
+    // this.openBookIsOpen = false
+
     this.cursors = game.input.keyboard.createCursorKeys()
     this.shootButton = Phaser.Keyboard.CONTROL
     this.jumpButton = Phaser.Keyboard.SPACE
-    this.enableLock = Phaser.Keyboard.E
+    this.openBookButton = Phaser.Keyboard.B
+    this.openLockButton = Phaser.Keyboard.L
+    // Capture all key presses
+    game.input.keyboard.addCallbacks(this, null, null, this.insertCode)
+
+    this.princessBlock = game.add.sprite(570, 140, 'princess-block')
+    game.physics.arcade.enable(this.princessBlock)
+    this.princessBlock.body.enable = true
+    this.princessBlock.body.immovable = true
+    this.princessBlockSayOnce = true
+
+    this.anotherCastle = game.add.audio('another-castle')
+    this.marioWords = game.add.audio('mario-last-words')
   },
 
   update () {
     game.physics.arcade.collide(this.mario, this.floor)
     game.physics.arcade.collide(this.mario, this.doorBlock)
+    game.physics.arcade.collide(this.mario, this.princessBlock, this.lastWords, null, this)
 
-    if (game.input.keyboard.isDown(this.enableLock)) this.enableLockFunc()
-
+    // playe controls
     this.movePlayer()
+
+    // open book
+    if (game.input.keyboard.isDown(this.openBookButton)) {
+      this.showQuestions()
+    }
+
+    // show lock screen
+    if (game.input.keyboard.isDown(this.openLockButton)) {
+      this.showScreen()
+    }
+
+    // open the door if user insert correct code
+    if (this.userCode.text === this.code) {
+      this.openDoorFunc()
+    }
   },
 
   movePlayer () {
@@ -120,24 +172,72 @@ let secondLevel = {
     }
   },
 
-  enableLockFunc () {
-    console.log('Hello, world!')
-  },
+  insertCode (char) {
+    if (this.lockIsEnable) {
+      if (this.codeArr.length < 5) {
+        this.codeArr.push(char)
+      }
+      this.userCode.text = this.codeArr.join('')
 
-  insertCode () {
-    let code = '13985'
-
+      if (this.codeArr.length === 5 && this.userCode.text !== this.code) {
+        this.wrongCode()
+      }
+    }
   },
 
   showScreen () {
-    let screen = game.add.sprite(400, 200, 'lock-screen')
-    screen.anchor.setTo(0.5, 0.5)
-    screen.inputEnabled = true
-    screen.input.useHandCursor = true
-    screen.events.onInputUp.add(spriteDestroy, this)
+    this.lockIsEnable = true
+    game.add.tween(this.screen).to({ x: this.screen.x = 400 }, 500, Phaser.Easing.Linear.None, true, 0, 0, false)
+  },
 
-    function spriteDestroy (sprite) {
-      sprite.destroy()
+  // hide lock screen sprite
+  spriteDestroy () {
+    this.lockIsEnable = false
+    game.add.tween(this.screen).to({ x: this.screen.x = -300 }, 500, Phaser.Easing.Linear.None, true, 0, 0, false)
+    this.userCode.text = ''
+    this.codeArr = []
+  },
+
+  showQuestions () {
+    game.add.tween(this.openBook).to({ x: this.openBook.x = 400 }, 500, Phaser.Easing.Linear.None, true, 0, 0, false)
+  },
+
+  closeQuestionsBook () {
+    game.add.tween(this.openBook).to({ x: this.openBook.x = -300 }, 500, Phaser.Easing.Linear.None, true, 0, 0, false)
+  },
+
+  openDoorFunc () {
+    this.doorBlock.body.enable = false
+    this.doorBlock.alpha = 0
+    this.spriteDestroy()
+    this.lock.destroy()
+  },
+
+  wrongCode () {
+    this.userCode.text = 'wrong'
+  },
+
+  lastWords () {
+    if (this.princessBlockSayOnce) {
+      setTimeout(() => {
+        this.anotherCastle.play()
+        this.princessBlockSayOnce = false
+      }, 200)
     }
+    setTimeout(() => {
+      this.marioWords.play()
+    }, 3700)
+
+    setTimeout(() => {
+      this.shoot.play()
+    }, 6000)
+
+    setTimeout(() => {
+      this.shoot.play()
+    }, 6600)
+
+    setTimeout(() => {
+      game.state.start('win')
+    }, 7000)
   }
 }

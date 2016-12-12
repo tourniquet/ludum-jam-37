@@ -4,6 +4,8 @@ let firstLevel = {
   create () {
     game.add.image(0, 0, 'first-level-background')
 
+    game.state.remove('menu')
+
     // level sounds
     this.shoot = game.add.audio('shoot')
     this.shoot.volume = 0.5
@@ -53,6 +55,28 @@ let firstLevel = {
     this.blockDragon.body.enable = true
     this.blockDragon.body.immovable = true
 
+    // dragon book
+    this.book = game.add.sprite(660, 260, 'book')
+    this.book.alpha = 0
+    game.physics.arcade.enable(this.book)
+    this.book.body.enable = true
+    this.book.body.immovable = true
+
+    // open book
+    this.openBook = game.add.sprite(400, 200, 'open-book')
+    this.openBook.anchor.setTo(0.5, 0.5)
+    this.openBook.alpha = 0
+    this.openBook.inputEnabled = true
+    this.openBook.input.useHandCursor = true
+    this.openBook.events.onInputUp.add(this.closeQuestionsBook, this)
+    this.openBookExists = false
+
+    // tube
+    this.tube = game.add.sprite(730, 230, 'tube')
+    game.physics.arcade.enable(this.tube)
+    this.tube.body.enable = true
+    this.tube.body.immovable = true
+
     // mario
     this.mario = game.add.sprite(100, 325, 'mario')
     game.physics.arcade.enable(this.mario)
@@ -84,6 +108,7 @@ let firstLevel = {
     this.cursors = game.input.keyboard.createCursorKeys()
     this.shootButton = Phaser.Keyboard.CONTROL
     this.jumpButton = Phaser.Keyboard.SPACE
+    this.openBookButton = Phaser.Keyboard.B
 
     // call event only once when key is pressed
     this.eventOnce = false
@@ -92,11 +117,18 @@ let firstLevel = {
   update () {
     game.physics.arcade.collide(this.mario, this.floor)
     game.physics.arcade.collide(this.mario, this.blockDragon, this.killDragonMessage, null, this)
+    game.physics.arcade.overlap(this.mario, this.book, this.showQuestions, null, this)
+    game.physics.arcade.overlap(this.mario, this.tube, this.startSecondLevel, null, this)
 
     this.movePlayer()
 
     if (this.killDragonShootCounter === 0) {
       this.deadDragonFunc()
+    }
+
+    // open book
+    if (game.input.keyboard.isDown(this.openBookButton) && this.openBookExists) {
+      this.showQuestions()
     }
   },
 
@@ -161,7 +193,7 @@ let firstLevel = {
 
   fartSorryFunc () {
     setTimeout(() => {
-      // this.fartSorry.play()
+      this.fartSorry.play()
     }, 400)
   },
 
@@ -189,14 +221,20 @@ let firstLevel = {
     this.blockDragon.body = false
     game.add.tween(this.dragon).to({ alpha: 0 }, 1000, Phaser.Easing.Linear.None, true, 0, 0, false)
     this.shootDragonTexMessage.text = ''
-
-    // dragon book
-    let book = game.add.sprite(660, 260, 'book')
-    book.alpha = 0
-    game.add.tween(book).to({ alpha: 1 }, 1000, Phaser.Easing.Linear.None, true, 0, 0, false)
+    game.add.tween(this.book).to({ alpha: 1 }, 1000, Phaser.Easing.Linear.None, true, 0, 0, false)
   },
 
   showQuestions () {
-    let openBook = game.add.sprite(400, 200, 'open-book')
+    this.book.destroy()
+    game.add.tween(this.openBook).to({ alpha: 1 }, 500, Phaser.Easing.Linear.None, true, 0, 0, false)
+    this.openBookExists = true
+  },
+
+  closeQuestionsBook () {
+    game.add.tween(this.openBook).to({ alpha: 0 }, 500, Phaser.Easing.Linear.None, true, 0, 0, false)
+  },
+
+  startSecondLevel () {
+    game.state.start('secondLevel')
   }
 }
